@@ -1,3 +1,7 @@
+console.log('Request headers:', req.headers);
+console.log('Request body:', req.body);
+
+
 export default async function handler(req, res) {
   // ✅ Dynamically set CORS headers
   const origin = req.headers.origin || '*';
