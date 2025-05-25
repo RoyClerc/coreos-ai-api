@@ -1,16 +1,12 @@
-console.log('Request headers:', req.headers);
-console.log('Request body:', req.body);
-
+// api/gpt.js
 
 export default async function handler(req, res) {
-  // ✅ Dynamically set CORS headers
   const origin = req.headers.origin || '*';
   res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
 
-  // ✅ Handle preflight request
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -26,6 +22,9 @@ export default async function handler(req, res) {
   }
 
   try {
+    console.log('🔍 Prompt received:', prompt);
+    console.log('🔑 Using API key:', process.env.OPENAI_API_KEY ? 'YES' : 'MISSING');
+
     const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -40,13 +39,14 @@ export default async function handler(req, res) {
     });
 
     const data = await openaiRes.json();
-
     if (!openaiRes.ok) {
+      console.error('❌ OpenAI Error:', data);
       return res.status(openaiRes.status).json({ error: data });
     }
 
     return res.status(200).json({ response: data.choices[0].message.content });
   } catch (error) {
+    console.error('💥 Server Crash:', error.message);
     return res.status(500).json({ error: error.message });
   }
 }
