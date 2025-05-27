@@ -1,7 +1,5 @@
-// api/gpt.js (Restructured for passthrough behavior with frontend-provided prompt and system)
-
 export default async function handler(req, res) {
-  // ✅ Dynamic CORS headers
+  // ✅ Dynamic CORS headers for frontend access
   const origin = req.headers.origin || '*';
   res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
