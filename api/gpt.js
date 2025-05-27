@@ -1,10 +1,14 @@
+// api/gpt.js (Restructured for passthrough behavior with frontend-provided prompt and system)
+
 export default async function handler(req, res) {
+  // ✅ Dynamic CORS headers
   const origin = req.headers.origin || '*';
   res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
 
+  // ✅ Preflight
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -13,10 +17,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { prompt } = req.body;
+  const { prompt, system } = req.body;
 
-  if (!prompt) {
-    return res.status(400).json({ error: 'No prompt provided' });
+  if (!prompt || !system) {
+    return res.status(400).json({ error: 'Missing prompt or system instruction' });
   }
 
   try {
@@ -28,7 +32,10 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: prompt }
+        ],
         temperature: 0.7,
       }),
     });
@@ -39,14 +46,7 @@ export default async function handler(req, res) {
       return res.status(openaiRes.status).json({ error: data });
     }
 
-    // ✅ Clean code block from response
-    let cleaned = data.choices[0].message.content;
-    if (cleaned.startsWith("```json")) {
-      cleaned = cleaned.replace(/^```json\n?/, '').replace(/```$/, '');
-    }
-
-    return res.status(200).json({ response: cleaned });
-
+    return res.status(200).json({ response: data.choices[0].message.content });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
