@@ -39,10 +39,13 @@ export default async function handler(req, res) {
       return res.status(openaiRes.status).json({ error: data });
     }
 
-    // ✅ Return just the text content from OpenAI
-    return res.status(200).json({
-      response: data.choices[0].message.content,
-    });
+    // ✅ Clean code block from response
+    let cleaned = data.choices[0].message.content;
+    if (cleaned.startsWith("```json")) {
+      cleaned = cleaned.replace(/^```json\n?/, '').replace(/```$/, '');
+    }
+
+    return res.status(200).json({ response: cleaned });
 
   } catch (error) {
     return res.status(500).json({ error: error.message });
